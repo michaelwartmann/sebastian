@@ -333,11 +333,10 @@
                     }
                 });
                 
-                // Increased speed for guitars
                 guitar.userData.velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.08, // Increased from 0.03
-                    (Math.random() - 0.5) * 0.08, // Increased from 0.03
-                    (Math.random() - 0.5) * 0.08  // Increased from 0.03
+                    (Math.random() - 0.5) * 0.08, 
+                    (Math.random() - 0.5) * 0.08, 
+                    (Math.random() - 0.5) * 0.08  
                 );
                 guitar.userData.rotationSpeed = new THREE.Vector3(
                     Math.random() * 0.015, 
@@ -346,6 +345,7 @@
                 );
                 guitar.userData.originalPosition = guitar.position.clone();
                 guitar.userData.baseScale = 0.8 + Math.random() * 0.4; 
+                guitar.userData.smoothedFrequency = 0; // Initialize smoothedFrequency
                 guitar.scale.setScalar(guitar.userData.baseScale);
 
                 guitars.push(guitar);
@@ -393,6 +393,8 @@
                     letterGroup.add(midBar);
                     if (textObjectName === "papaText") { 
                         letterGroup.rotation.z = Math.PI; 
+                    } else {
+                        letterGroup.rotation.z = 0; // Ensure 'A' is upright for other texts
                     }
                 } else if (letter === 'R') {
                     const vertical = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, letterDepth), letterMaterial);
@@ -797,8 +799,7 @@
             guitars.forEach((guitar, index) => {
                 guitar.position.add(guitar.userData.velocity);
                 
-                // Increased boundary for guitars
-                const maxDistance = 25; // Increased from 10
+                const maxDistance = 25; 
                 if (guitar.position.length() > maxDistance) {
                     guitar.userData.velocity.multiplyScalar(-0.95);
                     guitar.position.normalize().multiplyScalar(maxDistance * 0.98);
@@ -810,12 +811,18 @@
                 
                 if (analyser && audioData && audioData.length > 0) {
                     const freqIndex = Math.floor((index / guitars.length) * (audioData.length / 2)); 
-                    const frequency = audioData[freqIndex] / 255; 
+                    const rawFrequency = audioData[freqIndex] / 255; 
+
+                    if (guitar.userData.smoothedFrequency === undefined) {
+                        guitar.userData.smoothedFrequency = rawFrequency;
+                    }
+                    guitar.userData.smoothedFrequency = guitar.userData.smoothedFrequency * 0.85 + rawFrequency * 0.15; // Smoothing factor
+                    const frequency = guitar.userData.smoothedFrequency;
+
                     const scaleMultiplier = 1 + frequency * 0.6; 
                     guitar.scale.setScalar(guitar.userData.baseScale * scaleMultiplier);
                     
-                    guitar.position.x = guitar.userData.originalPosition.x + Math.sin(time + index) * 0.5 + frequency * (Math.random()-0.5) * 2;
-                    guitar.position.y = guitar.userData.originalPosition.y + Math.cos(time + index) * 0.5 + frequency * (Math.random()-0.5) * 2;
+                    // Direct audio-reactive position manipulation removed to reduce jitter
                 } else {
                     guitar.scale.setScalar(guitar.userData.baseScale); 
                 }
