@@ -345,7 +345,7 @@
                 );
                 guitar.userData.originalPosition = guitar.position.clone();
                 guitar.userData.baseScale = 0.8 + Math.random() * 0.4; 
-                guitar.userData.smoothedFrequency = 0; // Initialize smoothedFrequency
+                guitar.userData.smoothedFrequency = 0; 
                 guitar.scale.setScalar(guitar.userData.baseScale);
 
                 guitars.push(guitar);
@@ -391,10 +391,11 @@
                     const midBar = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, letterDepth), letterMaterial);
                     midBar.position.y = -0.1;
                     letterGroup.add(midBar);
+                    
+                    // Corrected rotation logic for 'A'
+                    letterGroup.rotation.z = 0; // Default to upright
                     if (textObjectName === "papaText") { 
-                        letterGroup.rotation.z = Math.PI; 
-                    } else {
-                        letterGroup.rotation.z = 0; // Ensure 'A' is upright for other texts
+                        letterGroup.rotation.z = Math.PI; // Flip only for PAPA
                     }
                 } else if (letter === 'R') {
                     const vertical = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, letterDepth), letterMaterial);
@@ -816,13 +817,12 @@
                     if (guitar.userData.smoothedFrequency === undefined) {
                         guitar.userData.smoothedFrequency = rawFrequency;
                     }
-                    guitar.userData.smoothedFrequency = guitar.userData.smoothedFrequency * 0.85 + rawFrequency * 0.15; // Smoothing factor
+                    guitar.userData.smoothedFrequency = guitar.userData.smoothedFrequency * 0.85 + rawFrequency * 0.15; 
                     const frequency = guitar.userData.smoothedFrequency;
 
                     const scaleMultiplier = 1 + frequency * 0.6; 
                     guitar.scale.setScalar(guitar.userData.baseScale * scaleMultiplier);
                     
-                    // Direct audio-reactive position manipulation removed to reduce jitter
                 } else {
                     guitar.scale.setScalar(guitar.userData.baseScale); 
                 }
